@@ -77,7 +77,7 @@ public class LoginAction {
 	 */
 	@RequestMapping("mkdirs.do")
 	public void createDir(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		Test.resolveZip("/usr/local/data.zip");
+//		Test.resolveZip("/usr/local/data.zip");
 //		File file=new File("/home/wzhy/mlkfk");
 		
 //		if(!file.exists()&&!file.isDirectory()) {
