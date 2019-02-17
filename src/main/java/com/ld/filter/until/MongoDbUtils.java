@@ -1,5 +1,6 @@
 package com.ld.filter.until;
 
+import org.apache.ibatis.annotations.DeleteProvider;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.junit.Before;
@@ -13,6 +14,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Updates.*;
+import static com.mongodb.client.model.Projections.*;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -21,12 +23,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 /**
  * java原生代码实现mongodb
  * @author lvdong
  *
  */
-import com.mongodb.client.MongoDatabase;
 public class MongoDbUtils {
 	
 	private static final Logger logger = LoggerFactory.getLogger(MongoDbUtils.class);
@@ -61,7 +65,8 @@ public class MongoDbUtils {
 		favoriteMap.put("movies",Arrays.asList("钢铁","蜘蛛","你猜猜看"));
 		favoriteMap.put("cites",Arrays.asList("长沙","江都"));
 		tempDoc.append("favorite",favoriteMap);
-		System.out.println("list.size"+Arrays.asList(tempDoc,tempDoc).size());
+		logger.info("list.size"+Arrays.asList(tempDoc,tempDoc).size());
+		//插入同一个地址的对象只会插入一条数据
 		doc.insertMany(Arrays.asList(tempDoc,tempDoc));
 	}
 	
@@ -83,5 +88,39 @@ public class MongoDbUtils {
 		findResult.forEach(printBlock);
 		logger.info("------------------------>"+ret.size());
 		ret.removeAll(ret);
+	}
+	/**
+	 * mongo update方法
+	 */
+	@Test
+	public void testUpdate() {
+		//db.users.updateMany({ "username" : "lison"},{ "$set" : { "age" : 6}},true)
+		Bson eq=eq("username","lison");
+		Bson set=set("age","8");
+		UpdateResult updateMany=doc.updateMany(eq, set);
+		logger.info("------------>"+String.valueOf(updateMany));
+		//db.users.updateMany({ "favorites.cites" : "东莞"}, 
+		//{ "$addToSet" : { "favorites.movies" : { "$each" : [ "小电影2 " , "小电影3"]}}},true)
+		Bson eqTwo=eq("favorites.cites","东莞");
+		Bson addEachToSet=addEachToSet("favorites.movies", Arrays.asList("小电影2","小电影3"));
+		UpdateResult updateResult= doc.updateMany(eqTwo, addEachToSet);
+		logger.info("-------->"+String.valueOf(updateResult));
+	}
+	/**
+	 * mongo delete方法
+	 */
+	@Test
+	public void testDelete() {
+		//db.users.deleteMany({ "username" : "lison"} )
+		Bson eq=eq("username","lison");
+		DeleteResult deleteResult= doc.deleteMany(eq);
+		logger.info("------------->"+String.valueOf(deleteResult));
+		
+		//db.users.deleteMany({"$and" : [ {"age" : {"$gt": 8}} , {"age" : {"$lt" : 25}}]})
+		Bson gt=gt("age",8);
+		Bson lt=lt("age",25);
+		Bson and=and(gt,lt);
+		DeleteResult tempResult = doc.deleteMany(and);
+		logger.info("------------>"+String.valueOf(tempResult));
 	}
 }
